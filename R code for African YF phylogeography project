@@ -1,0 +1,57 @@
+R script for generating the MCC tree of African YF sequences.
+library(tidyverse)
+library(treeio)
+library(ggtree)
+library(ape)
+library(ggpubr)
+library(tidytree)
+library(cowplot)
+
+tree <- read.beast("C:/Users/THIS/FOLIO/Downloads/TA YF Afr locatn_updated")
+ggtree <- (tree)
+Po <- ggtree(tree, mrsd="2018-01-01", color="grey75", sixe=0.3) +
+  theme_tree2() + scale_colour_manual(values=c("gray80")) +
+  geom_tippoint(aes(fill = location), size = 4, color = "black", shape = 21) +
+  theme(axis.text.x = element_text(angle=45, size=10, vjust=0.3, hjust=0.3))
+
+R script for generating the root to tip regression plot from Tempest data
+library(tidyverse)
+library(ggpubr)
+
+View("C:/Users/THIS/Documents/Afr YF Tempest_DATA_tabdelim.txt")
+P <- ggplot(Afr.YF.Tempest_DATA_tabdelim, aes(x=date, y=distance)) +
+  geom_point(fill="green", size=4.5, color="black", shape=21) +
+  geom_smooth(method = "lm",se=T, color='black', formula = y ~ x) +
+  stat_regline_equation(aes(label = paste(..rr.label.., sep = "~~~~"))) +
+  labs(x="Date", y="Root to tip Distance")
+
+# R script for generating a bar char and line grapgh showing the Number of YF Cases and the number of Deaths as line.
+
+ggp <- ggplot(Afr_YF_Case_fatality_NEW3)  + 
+  geom_bar(aes(x=Date, y=Cases),stat="identity", fill="cyan",colour="black")+
+  geom_line(aes(x=Date, y=Deaths),stat="identity",color="red",linewidth=1.5)+
+  labs(title= "African Yellow Fever Case/Fatality trend",
+       x="Year",y="Number")+
+  scale_y_continuous(sec.axis=sec_axis(~.*0.01,name="Percentage"))
+
+# R script for genarating a map data showing case distribution by country.
+library(tidyverse)
+library(maps)
+library(mapdata)
+library(maptools) 
+library(scales)
+library(rworldmap)
+library(readxl)
+library(RColorBrewer)
+
+mapdaata <- read_csv("C:/Users/THIS/Documents/Afr YF Case_fatality_cood2csv.csv", stringsAsFactros=FALSE)
+
+head(mapdaata)
+mapdaata <- aggregate(mapdaata$Cases, list(mapdaata$Country), FUN=sum)
+print(mapdaata)
+colnames(mapdaata)[colnames(mapdaata)=="x"] <- "Distribution of YF cases in Africa 1979 to 2019"
+
+x <- joinCountryData2Map(mapdaata,nameJoinColumn = "Group.1", joinCode = "NAME")
+mapCountryData(x, nameColumnToPlot = "x", 
+               catMethod = "fixedwidth", 
+               colorpalette = "heat", numCats = 5)
