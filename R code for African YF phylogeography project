@@ -55,3 +55,35 @@ x <- joinCountryData2Map(mapdaata,nameJoinColumn = "Group.1", joinCode = "NAME")
 mapCountryData(x, nameColumnToPlot = "x", 
                catMethod = "fixedwidth", 
                colorpalette = "heat", numCats = 5)
+
+# Updated code for Visualizing data for Case_Fatality rates in World map and bar chart
+library(tidyverse)
+library(ggmap)
+library(mapproj)
+library(patchwork)
+mapdata <- map_data("world")
+Newfile <- read.csv("C:/Users/THIS/Downloads/AfrYF update_Cases_New1_CSV.csv")
+world_map = merge(world_map, Newfile, by.x="region", by.y="region")
+world_map = world_map[order(world_map$group, world_map$order),]
+ A <- ggplot(world_map, aes(x=long, y=lat, group=group)) +
++   geom_polygon(aes(fill=Cases, color="blue")) + coord_map("mercator")
+A
+
+Newfile1 <- read.csv("C:/Users/THIS/Downloads/AfrYF update_Deaths_New_CSV.csv")
+world_map1 = merge(world_map, Newfile1, by.x="region", by.y="region")
+world_map1 = world_map1[order(world_map1$group, world_map1$order),]
+B <- ggplot(world_map1, aes(x=long, y=lat, group=group)) +
++   geom_polygon(aes(fill=Deaths, color="blue")) + coord_map("mercator")
+B
+# Code for drawing YF Case_Fatality bar chart
+W <- ggplot(Afr_YF_Case_fatality_NEW3, aes(x = Date, y = Cases, fill = Country)) +
++   geom_col(position = position_stack(reverse = TRUE)) +
++   guides(fill = guide_legend(reverse = TRUE))
+W
+X <- ggplot(Afr_YF_Case_fatality_NEW3, aes(x = Date, y = Deaths, fill = Country)) +
++   geom_col(position = position_stack(reverse = TRUE)) +
++   guides(fill = guide_legend(reverse = TRUE))
+X
+# Merge all the plots together inpatcwork to form one plot
+(A | B)/(W | X)
+
