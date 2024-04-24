@@ -34,56 +34,61 @@ ggp <- ggplot(Afr_YF_Case_fatality_NEW3)  +
        x="Year",y="Number")+
   scale_y_continuous(sec.axis=sec_axis(~.*0.01,name="Percentage"))
 
-# R script for genarating a map data showing case distribution by country.
-library(tidyverse)
-library(maps)
-library(mapdata)
-library(maptools) 
-library(scales)
-library(rworldmap)
-library(readxl)
-library(RColorBrewer)
-
-mapdaata <- read_csv("C:/Users/THIS/Documents/Afr YF Case_fatality_cood2csv.csv", stringsAsFactros=FALSE)
-
-head(mapdaata)
-mapdaata <- aggregate(mapdaata$Cases, list(mapdaata$Country), FUN=sum)
-print(mapdaata)
-colnames(mapdaata)[colnames(mapdaata)=="x"] <- "Distribution of YF cases in Africa 1979 to 2019"
-
-x <- joinCountryData2Map(mapdaata,nameJoinColumn = "Group.1", joinCode = "NAME")
-mapCountryData(x, nameColumnToPlot = "x", 
-               catMethod = "fixedwidth", 
-               colorpalette = "heat", numCats = 5)
 
 # Updated code for Visualizing data for Case_Fatality rates in World map and bar chart
 library(tidyverse)
 library(ggmap)
 library(mapproj)
-library(patchwork)
-mapdata <- map_data("world")
-Newfile <- read.csv("C:/Users/THIS/Downloads/AfrYF update_Cases_New1_CSV.csv")
-world_map = merge(world_map, Newfile, by.x="region", by.y="region")
-world_map = world_map[order(world_map$group, world_map$order),]
- A <- ggplot(world_map, aes(x=long, y=lat, group=group)) +
-+   geom_polygon(aes(fill=Cases, color="blue")) + coord_map("mercator")
-A
+library(cowplot)
 
-Newfile1 <- read.csv("C:/Users/THIS/Downloads/AfrYF update_Deaths_New_CSV.csv")
-world_map1 = merge(world_map, Newfile1, by.x="region", by.y="region")
-world_map1 = world_map1[order(world_map1$group, world_map1$order),]
-B <- ggplot(world_map1, aes(x=long, y=lat, group=group)) +
-+   geom_polygon(aes(fill=Deaths, color="blue")) + coord_map("mercator")
-B
+YFdata <- AfrYF_update_Cases_New1csv
+
+mapdata <- map_data("world")
+mapdata <- left_join(mapdata, YFdata, by="region")
+View(mapdata)
+mapdata1 <- mapdata %>% filter(!is.na(mapdata$Cases))
+View(mapdata1)
+
+Yfmap1 <- ggplot(mapdata1, aes(x=long, y=lat, group=group)) +
+  geom_polygon(aes(fill=Cases), color="black") + 
+  coord_map("ortho", orientation = c(10, 4, 0))
+
+Ymap1 <- Yfmap1 +  scale_fill_gradient(name="Cases", low="grey90", high="darkblue") +
+  theme(rect = element_blank())
+
+YFdata2 <- read.csv("C:/Users/HP/Documents/AfrYF update_Deaths_New_CSV.csv")
+mapdata2 <- left_join(mapdata, YFdata2, by="region")
+mapdata3 <- mapdata2 %>% filter(!is.na(mapdata2$Deaths))
+View(mapdata3)
+
+Yfmap2 <- ggplot(mapdata3, aes(x=long, y=lat, group=group)) +
+  geom_polygon(aes(fill=Deaths), color="black") +
+  coord_map("ortho", orientation = c(13, 4, 0))
+
+Ymap2 <- Yfmap2 + scale_fill_gradient(name="Deaths", low="grey90", high="darkblue") +
+  theme(rect = element_blank())
+
 # Code for drawing YF Case_Fatality bar chart
-W <- ggplot(Afr_YF_Case_fatality_NEW3, aes(x = Date, y = Cases, fill = Country)) +
-+   geom_col(position = position_stack(reverse = TRUE)) +
-+   guides(fill = guide_legend(reverse = TRUE))
-W
-X <- ggplot(Afr_YF_Case_fatality_NEW3, aes(x = Date, y = Deaths, fill = Country)) +
-+   geom_col(position = position_stack(reverse = TRUE)) +
-+   guides(fill = guide_legend(reverse = TRUE))
-X
-# Merge all the plots together inpatcwork to form one plot
-(A | B)/(W | X)
+Bar1 <- ggplot(Afr_YF_Case_fatality_NEW3, aes(x = Date, y = Cases, fill = Country)) +
+  geom_col(position = position_stack(reverse = TRUE)) +
+  guides(fill = guide_legend(reverse = TRUE))
+
+Bar2 <- ggplot(Afr_YF_Case_fatality_NEW3, aes(x = Date, y = Deaths, fill = Country)) +
+  geom_col(position = position_stack(reverse = TRUE)) +
+  guides(fill = guide_legend(reverse = TRUE))
+
+B_1 <- Bar1 + scale_fill_brewer(palette = "Set3") +
+  theme(rect = element_blank(), 
+        legend.key.size = unit(0.3, "cm"),
+        axis.text.x = element_text(color = "black", angle = 45) )
+
+B_2 <- Bar2 + scale_fill_brewer(palette = "Set3") + 
+  theme(rect = element_blank(), 
+        legend.key.size = unit(0.3, "cm"),
+        axis.text.x = element_text(color = "black", angle = 45) )
+
+# Merge all 4 plots with cowplot
+plot_grid(
+  Ymap1, Ymap2, B_1, B_2,
+  labels = "AUTO", rel_heights = c(1.5, 1) )
 
